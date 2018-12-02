@@ -1,10 +1,9 @@
 package aoc.day01
 
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, Matchers}
 import ChronalCalibration._
-import org.scalatest.Matchers._
 
-class ChronalCalibrationTest extends FunSuite {
+class ChronalCalibrationTest extends FunSuite with Matchers {
 
   // Part 1
 
