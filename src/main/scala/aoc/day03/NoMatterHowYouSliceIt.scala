@@ -22,7 +22,7 @@ object NoMatterHowYouSliceIt extends App {
     } yield (x, y)
 
   val coordsWithClaims: Map[(Int, Int), Seq[Claim]] = coords.map(co =>
-    (co, inputClaims.filter(cl => Function.tupled(isWithinClaim(cl))(co)))
+    (co, inputClaims.filter(cl => Function.tupled(isWithinClaim(cl)_)(co)))
   ).toMap
 
   val inchesWithinTwoOrMoreClaims =
