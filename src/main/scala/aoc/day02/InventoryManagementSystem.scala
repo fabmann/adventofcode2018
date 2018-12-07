@@ -42,7 +42,7 @@ object InventoryManagementSystem extends App {
     a.zip(b)
       .filter(c => c._1 == c._2)
       .map(_._1)
-      .foldLeft("")(_ + _)
+      .mkString
   }
 
 }
