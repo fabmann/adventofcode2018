@@ -1,41 +1,43 @@
 package aoc.day08
 
-import scala.annotation.tailrec
+import cats.data.State
+
 import scala.io.Source
 
 object MemoryManeuver extends App {
 
   case class Node(childNodes: Seq[Node], metadata: Seq[Int])
 
+  case class Header(qtyChildren: Int, qtyMetadata: Int)
+
   val input: Seq[Int] = Source.fromResource("input_day08.txt").mkString.split(" ").map(_.toInt).toList
 
-  def readNode(ints: Seq[Int]): (Node, Seq[Int]) = {
-    ints match {
-      case qtyChildren :: qtyMetadata :: tail =>
-        val (children, rest) = readChildren(qtyChildren, tail)
-        val (metadata, rest1) = readMetadata(qtyMetadata, rest)
-        (Node(children, metadata), rest1)
-    }
+  val readHeader: State[Seq[Int], Header] = State[Seq[Int], Header] {
+    case qtyChildren :: qtyMetadata :: tail => (tail, Header(qtyChildren, qtyMetadata))
   }
 
-  @tailrec
-  def readChildren(n: Int, tail: Seq[Int], acc: Seq[Node] = Seq.empty): (Seq[Node], Seq[Int]) = {
+  def readChildren(n: Int, acc: Seq[Node] = Seq.empty): State[Seq[Int], Seq[Node]] =
     if (n == 0) {
-      (acc, tail)
+      State[Seq[Int], Seq[Node]](tail => (tail, acc))
     } else {
-      val (child, rest) = readNode(tail)
-      readChildren(n - 1, rest, acc :+ child)
+      readNode.flatMap(child => readChildren(n - 1, acc :+ child))
     }
-  }
 
-  def readMetadata(n: Int, rest: Seq[Int]): (Seq[Int], Seq[Int]) = {
-    (rest.take(n), rest.drop(n))
-  }
+  def readMetadata(n: Int): State[Seq[Int], Seq[Int]] = State[Seq[Int], Seq[Int]](rest =>
+    (rest.drop(n), rest.take(n))
+  )
+
+  val readNode: State[Seq[Int], Node] =
+    for {
+      header   <- readHeader
+      children <- readChildren(header.qtyChildren)
+      metadata <- readMetadata(header.qtyMetadata)
+    } yield Node(children, metadata)
 
   def sumMetadata(node: Node): Int =
     node.childNodes.map(sumMetadata).sum + node.metadata.sum
 
-  val rootNode: Node = readNode(input)._1
+  val rootNode: Node = readNode.runA(input).value
 
   println(s"What is the sum of all metadata entries? ${sumMetadata(rootNode)}")
 
