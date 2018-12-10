@@ -73,17 +73,14 @@ object MarbleMania extends App {
     } yield Unit
   }
 
-  val isGameOver: State[GameState, Boolean] = State { s =>
-    (s, s.remainingMarbles.isEmpty)
-  }
-
   val gameLoop: State[GameState, Unit] = {
     State.get[GameState]
-      .flatMap(s => if (s.remainingMarbles.isEmpty) {
-        State.pure(())
-      } else {
-        nextTurn.flatMap(_ => gameLoop)
-      })
+      .flatMap(s =>
+        if (s.remainingMarbles.isEmpty) {
+          State.pure(())
+        } else {
+          nextTurn.flatMap(_ => gameLoop)
+        })
   }
 
   val winningElfScore = gameLoop.runS(initialState(inputQtyMarbles, inputQtyPlayers))
