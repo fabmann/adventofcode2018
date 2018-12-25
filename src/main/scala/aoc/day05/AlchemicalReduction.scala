@@ -1,6 +1,5 @@
 package aoc.day05
 
-import scala.annotation.tailrec
 import scala.io.Source
 
 object AlchemicalReduction extends App {
@@ -8,34 +7,21 @@ object AlchemicalReduction extends App {
   val scannedPolymer = Source.fromResource("input_day05.txt").toSeq.mkString
 
   def react(a: Char, b: Char): Boolean =
-    a.toLower == b.toLower && ((a.isLower && b.isUpper) || (a.isUpper && b.isLower))
+    a != b && a.toLower == b.toLower
 
-  @tailrec
-  def reductionStep(acc: String, polymer: String): String = {
-    if (polymer.isEmpty) {
-      acc
-    } else if (polymer.length == 1) {
-      acc + polymer
-    } else {
-      if (react(polymer.head, polymer.tail.head)){
-        reductionStep(acc, polymer.tail.tail)
-      } else {
-        reductionStep(acc + polymer.head, polymer.tail)
-      }
+  def reduce(polymer: String): String = {
+    polymer.foldLeft(""){
+      case ("", c) => c.toString
+      case (s, c) =>
+        if (react(s.last, c)) {
+          s.slice(0, s.length-1)
+        } else {
+          s + c
+        }
     }
   }
 
-  @tailrec
-  def reduceToMinimum(polymer: String): String = {
-    val reducedPoloymer = reductionStep("", polymer)
-    if (reducedPoloymer.length == polymer.length) {
-      reducedPoloymer
-    } else {
-      reduceToMinimum(reducedPoloymer)
-    }
-  }
-
-  println(s"After fully reacting the polymer ${reduceToMinimum(scannedPolymer).length} units remain.")
+  println(s"After fully reacting the polymer ${reduce(scannedPolymer).length} units remain.")
 
   val normalizedExistingUnits: Set[Char] = scannedPolymer.map(_.toLower).toSet
 
@@ -43,7 +29,7 @@ object AlchemicalReduction extends App {
 
   val shortestPolymerWithoutOneUnit: String = normalizedExistingUnits
     .map(polymerWithoutUnits)
-    .map(reduceToMinimum)
+    .map(reduce)
     .minBy(_.length)
 
   println(s"The length of the shortest polymer you can produce is: ${shortestPolymerWithoutOneUnit.length}")
